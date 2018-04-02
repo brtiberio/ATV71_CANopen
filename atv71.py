@@ -94,8 +94,10 @@ class ATV71:
             self.network.connect(channel=_channel, bustype=_bustype)
             self._connected = True
         except Exception as e:
-            self.logger.info('[ATV71:{0}] Exception caught:{1}\n'.format(
-                sys._getframe().f_code.co_name, str(e)))
+            self.logger.info('[{0}:{1}] Exception caught:{2}\n'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                str(e)))
             self._connected = False
         finally:
             return self._connected
@@ -122,11 +124,14 @@ class ATV71:
             try:
                 return self.node.sdo.upload(index, subindex)
             except Exception as e:
-                self.logger.info('[ATV71:{0}] Exception caught:{1}\n'.format(
-                    sys._getframe().f_code.co_name, str(e)))
+                self.logger.info('[{0}:{1}] Exception caught:{2}\n'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name, 
+                    str(e)))
                 return None
         else:
-            self.logger.info('[ATV71:{0}] Error: ATV71 is not connected\n'.format(
+            self.logger.info('[{0}:{1}] Error: {0} is not connected\n'.format(
+                self.__class__.__name__,
                 sys._getframe().f_code.co_name))
             return None
 
@@ -150,13 +155,18 @@ class ATV71:
                 text = "Code 0x{:08X}".format(e.code)
                 if e.code in self.errorIndex:
                     text = text + ", " + self.errorIndex[e.code]
-                self.logger.info('[ATV71:{0}] SdoAbortedError: '.format(sys._getframe().f_code.co_name) + text)
+                self.logger.info('[{0}:{1}] SdoAbortedError: '.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name) + text)
                 return False
             except canopen.SdoCommunicationError:
-                self.logger.info('[ATV71:{0}] SdoAbortedError: Timeout or unexpected response'.format(sys._getframe().f_code.co_name))
+                self.logger.info('[{0}:{1}] SdoAbortedError: Timeout or unexpected response'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
                 return False
         else:
-            self.logger.info('[ATV71:{0}] Error: ATV71 is not connected\n'.format(
+            self.logger.info('[{0}:{1}] Error: {0} is not connected\n'.format(
+                self.__class__.__name__,
                 sys._getframe().f_code.co_name))
             return False
 
@@ -172,10 +182,14 @@ class ATV71:
             text = "Code 0x{:08X}".format(e.code)
             if e.code in self.errorIndex:
                 text = text + ", " + self.errorIndex[e.code]
-            self.logger.info('[ATV71:{0}] SdoAbortedError: '.format(sys._getframe().f_code.co_name) + text)
+            self.logger.info('[{0}:{1}] SdoAbortedError: '.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name) + text)
             return None, False
         except canopen.SdoCommunicationError:
-            self.logger.info('[ATV71:{0}] SdoAbortedError: Timeout or unexpected response'.format(sys._getframe().f_code.co_name))
+            self.logger.info('[{0}:{1}] SdoAbortedError: Timeout or unexpected response'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name))
             return None, False
 
 
@@ -189,8 +203,10 @@ class ATV71:
             bool: a boolean if all went ok.
         '''
         # sending new controlword
-        self.logger.debug('[ATV:{0}] Sending controlword Hex={1:#06X} Bin={1:#018b}'.format(
-            sys._getframe().f_code.co_name, controlword))
+        self.logger.debug('[{0}:{1}] Sending controlword Hex={2:#06X} Bin={2:#018b}'.format(
+            self.__class__.__name__,
+            sys._getframe().f_code.co_name,
+            controlword))
         controlword = controlword.to_bytes(2, 'little')
         return self.writeObject(0x6040, 0, controlword)
 
@@ -203,13 +219,45 @@ class ATV71:
             text = "Code 0x{:08X}".format(e.code)
             if e.code in self.errorIndex:
                 text = text + ", " + self.errorIndex[e.code]
-            self.logger.info('[ATV71:{0}] SdoAbortedError: '.format(sys._getframe().f_code.co_name) + text)
+            self.logger.info('[{0}:{1}] SdoAbortedError: '.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name) + text)
             return None, False
         except canopen.SdoCommunicationError:
-            self.logger.info('[ATV71:{0}] SdoAbortedError: Timeout or unexpected response'.format(sys._getframe().f_code.co_name))
+            self.logger.info('[{0}:{1}] SdoAbortedError: Timeout or unexpected response'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name))
             return None, False
     
+    def readExtControlWord(self):
+        extControlWord = self.readObject(0x2037, 0x5)
+        if not extControlWord:
+            self.logger.info('[{0}:{1}] Failed to request ExtControlWord\n'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name))
+            return extControlWord, False
+        
+        # return statusword as an int type
+        extControlWord = int.from_bytes(extControlWord, 'little')
+        return extControlWord, True
     
+    def writeExtControlWord(self, extControlWord):
+        '''Send extControlword to device
+
+        Args:
+            extControlword: word to be sent.
+
+        Returns:
+            bool: a boolean if all went ok.
+        '''
+        # sending new extControlWord
+        self.logger.debug('[{0}:{1}] Sending controlword Hex={2:#06X} Bin={2:#018b}'.format(
+            self.__class__.__name__,
+            sys._getframe().f_code.co_name,
+            extControlWord))
+        extControlWord = extControlWord.to_bytes(2, 'little')
+        return self.writeObject(0x2037, 0x5, extControlWord)
+
     def changeATVState(self, newState):
         '''Change ATV state
 
@@ -248,12 +296,17 @@ class ATV71:
                       'disable operation', 'enable operation', 'fault reset']
 
         if not (newState in stateOrder):
-            logging.info('[ATV:{0}] Unkown state: {1}'.format(sys._getframe().f_code.co_name, newState))
+            logging.info('[{0}:{1}] Unkown state: {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                newState))
             return False
         else:
             controlword, Ok = self.readControlWord()
             if not Ok:
-                logging.info('[ATV:{0}] Failed to retreive controlword'.format(sys._getframe().f_code.co_name))
+                logging.info('[{0}:{1}] Failed to retreive controlword'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
                 return False
             # shutdown  0xxx x110
             if newState == 'shutdown':
@@ -354,7 +407,8 @@ class ATV71:
 		'''
         statusword, ok = self.readStatusWord()
         if not ok:
-            self.logger.info('[ATV:{0}] Failed to request StatusWord\n'.format(
+            self.logger.info('[{0}:{1}] Failed to request StatusWord\n'.format(
+                self.__class__.__name__,
                 sys._getframe().f_code.co_name))
         else:
 
@@ -442,7 +496,8 @@ class ATV71:
             	return ID
 
         # in case of unknown state or fail
-        print('[ATV:{0}] Error: Unknown state\nStatusword is Bin={1:#018b}'.format(
+        print('[{0}:{1}] Error: Unknown state\nStatusword is Bin={2:#018b}'.format(
+            self.__class__.__name__,
             sys._getframe().f_code.co_name,
             int.from_bytes(statusword, 'little'))
         )
@@ -451,9 +506,15 @@ class ATV71:
     def printATVState (self):
         ID = self.checkATVState()
         if ID is -1:
-            print('[ATV:{0}] Error: Unknown state\n'.format(sys._getframe().f_code.co_name))
+            print('[{0}:{1}] Error: Unknown state\n'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name))
         else:
-            print('[ATV:{0}] Current state [ID]:{1} [{2}]\n'.format( sys._getframe().f_code.co_name, self.state[ID], ID))
+            print('[{0}:{1}] Current state [ID]:{2} [{3}]\n'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                self.state[ID],
+                ID))
         return
 
 
@@ -461,11 +522,15 @@ class ATV71:
     def printStatusWord(self):
         statusword, Ok = self.readStatusWord()
         if not Ok:
-            print('[ATV71:{0}] Failed to retreive statusword\n'.format(sys._getframe().f_code.co_name))
+            print('[{0}:{1}] Failed to retreive statusword\n'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name))
             return
         else:
-            print("[ATV71:{1}] The statusword is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword, sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The statusword is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword))
             print('Bit 15: Direction of rotation [0 Foward | 1 Reverse]:          {0}'.format((statusword & (1 << 15))>>15))
             print('Bit 14: STOP via stop key:                                     {0}'.format((statusword & (1 << 14))>>14))
             print('Bit 13: Reserved:                                              {0}'.format((statusword & (1 << 13))>>13))
@@ -495,13 +560,17 @@ class ATV71:
             statusword.append(self.readObject(index, subId))
         # show ext statusword 0
         if not statusword[0]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 0))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 0))
         else:
             statusword[0] = int.from_bytes(statusword[0], 'little')
             cmd_origin = ['Terminals','HMI','ModBus','CANopen']
             origin = (statusword & (1 << 14))>>14 + (statusword & (1 << 13))>>13
-            print("[ATV71:{1}] The Extended statusword 0 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[0], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 0 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[0]))
             print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[0] & (1 << 15))>>15))
             print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[0] & (1 << 14))>>14))
             print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[0] & (1 << 13))>>13))
@@ -529,11 +598,15 @@ class ATV71:
         print('------------------------------------------------------------------')
         # show ext statusword 1
         if not statusword[1]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 1))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 1))
         else:
             statusword[1] = int.from_bytes(statusword[1], 'little')
-            print("[ATV71:{1}] The Extended statusword 1 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[1], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 1 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[1]))
             print('Bit 15: The "traverse control" function is active:             {0}'.format((statusword[1] & (1 << 15))>>15))
             print('Bit 14: Drive thermal state threshold reached:                 {0}'.format((statusword[1] & (1 << 14))>>14))
             print('Bit 13: Second frequency threshold reached:                    {0}'.format((statusword[1] & (1 << 13))>>13))
@@ -554,11 +627,15 @@ class ATV71:
         print('------------------------------------------------------------------')
         # show ext statusword 2
         if not statusword[2]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 2))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 2))
         else:
             statusword[2] = int.from_bytes(statusword[2], 'little')
-            print("[ATV71:{1}] The Extended statusword 2 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[2], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 2 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[2]))
             print('Bit 15: Reserved:                                              {0}'.format((statusword[2] & (1 << 15))>>15))
             print('Bit 14: Reserved:                                              {0}'.format((statusword[2] & (1 << 14))>>14))
             print('Bit 13: Reserved:                                              {0}'.format((statusword[2] & (1 << 13))>>13))
@@ -579,11 +656,15 @@ class ATV71:
         print('------------------------------------------------------------------')
         # show ext statusword 3
         if not statusword[3]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 3))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 3))
         else:
             statusword[3] = int.from_bytes(statusword[3], 'little')
-            print("[ATV71:{1}] The Extended statusword 3 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[3], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 3 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[3]))
             print('Bit 15: Output torque [0 positive | 1 negative]:               {0}'.format((statusword[3] & (1 << 15))>>15))
             print('Bit 14: Reserved:                                              {0}'.format((statusword[3] & (1 << 14))>>14))
             print('Bit 13: Reserved:                                              {0}'.format((statusword[3] & (1 << 13))>>13))
@@ -603,11 +684,15 @@ class ATV71:
         print('------------------------------------------------------------------')
         # show ext statusword 4
         if not statusword[4]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 4))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 4))
         else:
             statusword[4] = int.from_bytes(statusword[4], 'little')
-            print("[ATV71:{1}] The Extended statusword 4 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[4], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 4 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[4]))
             print('Bit 15: Fast stop in progress:                                 {0}'.format((statusword[4] & (1 << 15))>>15))
             print('Bit 14: Deceleration in progress:                              {0}'.format((statusword[4] & (1 << 14))>>14))
             print('Bit 13: Acceleration in progress:                              {0}'.format((statusword[4] & (1 << 13))>>13))
@@ -628,11 +713,15 @@ class ATV71:
         # show ext statusword 5
         #: TODO
         if not statusword[5]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 5))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 5))
         else:
             statusword[5] = int.from_bytes(statusword[5], 'little')
-            print("[ATV71:{1}] The Extended statusword 5 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[5], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 5 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[5]))
             print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[5] & (1 << 15))>>15))
             print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[5] & (1 << 14))>>14))
             print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[5] & (1 << 13))>>13))
@@ -653,11 +742,15 @@ class ATV71:
         # show ext statusword 6
         #: TODO
         if not statusword[6]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 6))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 6))
         else:
             statusword[6] = int.from_bytes(statusword[6], 'little')
-            print("[ATV71:{1}] The Extended statusword 6 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[6], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 6 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[6]))
             print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[6] & (1 << 15))>>15))
             print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[6] & (1 << 14))>>14))
             print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[6] & (1 << 13))>>13))
@@ -678,11 +771,15 @@ class ATV71:
         # show ext statusword 7
         #: TODO
         if not statusword[7]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 7))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 7))
         else:
             statusword[7] = int.from_bytes(statusword[7], 'little')
-            print("[ATV71:{1}] The Extended statusword 7 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[7], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 7 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[7]))
             print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[7] & (1 << 15))>>15))
             print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[7] & (1 << 14))>>14))
             print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[7] & (1 << 13))>>13))
@@ -702,11 +799,15 @@ class ATV71:
         print('------------------------------------------------------------------')
         # show ext statusword 8
         if not statusword[8]:
-            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 8))
+            print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name, 8))
         else:
             statusword[8] = int.from_bytes(statusword[8], 'little')
-            print("[ATV71:{1}] The Extended statusword 8 is Hex={0:#06X} Bin={0:#018b}\n".format(
-            statusword[8], sys._getframe().f_code.co_name))
+            print("[{0}:{1}] The Extended statusword 8 is Hex={2:#06X} Bin={2:#018b}\n".format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name,
+                statusword[8]))
             print('Bit 15: Driver ready:                                          {0}'.format((statusword[8] & (1 << 15))>>15))
             print('Bit 14: Reserved:                                              {0}'.format((statusword[8] & (1 << 14))>>14))
             print('Bit 13: Reserved:                                              {0}'.format((statusword[8] & (1 << 13))>>13))
@@ -739,10 +840,14 @@ class ATV71:
         if not controlword:
             controlword, Ok = self.readControlWord()
             if not Ok:
-                print('[ATV:{0}] Failed to retreive controlword\n'.format(sys._getframe().f_code.co_name))
+                print('[{0}:{1}] Failed to retreive controlword\n'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
                 return
-        print("[ATV:{1}] The controlword is Hex={0:#06X} Bin={0:#018b}\n".format(
-            controlword, sys._getframe().f_code.co_name))
+        print("[{0}:{1}] The controlword is Hex={2:#06X} Bin={2:#018b}\n".format(
+            self.__class__.__name__,
+            sys._getframe().f_code.co_name,
+            controlword))
         
         print('Bit 15: Can be assigned to command:                     {0}'.format((controlword & (1 << 15 ))>>15))
         print('Bit 14: Can be assigned to command:                     {0}'.format((controlword & (1 << 14 ))>>14))
