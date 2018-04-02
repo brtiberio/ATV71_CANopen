@@ -442,6 +442,10 @@ class ATV71:
             	return ID
 
         # in case of unknown state or fail
+        print('[ATV:{0}] Error: Unknown state\nStatusword is Bin={1:#018b}'.format(
+            sys._getframe().f_code.co_name,
+            int.from_bytes(statusword, 'little'))
+        )
         return -1
 
     def printATVState (self):
@@ -478,6 +482,248 @@ class ATV71:
             print('Bit 02: Operation enable:                                      {0}'.format((statusword & (1 << 2 ))>>2))
             print('Bit 01: Switched on:                                           {0}'.format((statusword & (1 << 1 ))>>1))
             print('Bit 00: Ready to switch on:                                    {0}'.format(statusword & 1))
+        return
+
+    def printAllStatusWords(self):
+        print('------------------------------------------------------------------')
+        self.printStatusWord()
+        print('------------------------------------------------------------------')
+        index = 0x2002
+        subindex = [0x7, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A]
+        statusword = []
+        for subId in subindex:
+            statusword.append(self.readObject(index, subId))
+        # show ext statusword 0
+        if not statusword[0]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 0))
+        else:
+            statusword[0] = int.from_bytes(statusword[0], 'little')
+            cmd_origin = ['Terminals','HMI','ModBus','CANopen']
+            origin = (statusword & (1 << 14))>>14 + (statusword & (1 << 13))>>13
+            print("[ATV71:{1}] The Extended statusword 0 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[0], sys._getframe().f_code.co_name))
+            print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[0] & (1 << 15))>>15))
+            print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[0] & (1 << 14))>>14))
+            print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[0] & (1 << 13))>>13))
+            print('Bit 12: Fast Stop:                                             {0}'.format((statusword[0] & (1 << 12))>>12))
+            print('Bit 11: Current or torque limit active:                        {0}'.format((statusword[0] & (1 << 11))>>11))
+            print('Bit 10: Deceleration in progress:                              {0}'.format((statusword[0] & (1 << 10))>>10))
+            print('Bit 09: Accelereation in progress:                             {0}'.format((statusword[0] & (1 << 9 ))>>9))
+            print('Bit 08: Overbraking:                                           {0}'.format((statusword[0] & (1 << 8 ))>>8))
+            print('Bit 07: Motor Thermal:                                         {0}'.format((statusword[0] & (1 << 7 ))>>7))
+            print('Bit 06: [0 Steady sate | 1 Transient state]:                   {0}'.format((statusword[0] & (1 << 6 ))>>6))
+            print('Bit 05: DC injection breaking:                                 {0}'.format((statusword[0] & (1 << 5 ))>>5))
+            print('Bit 04: Power supply present ([0 no Run | 1 Run]):             {0}'.format((statusword[0] & (1 << 4 ))>>4))
+            print('Bit 03: Reserved:                                              {0}'.format((statusword[0] & (1 << 3 ))>>3))
+            print('Bit 02: see description                                        {0}'.format((statusword[0] & (1 << 2 ))>>2))
+            print('Bit 01: Parameter consistency checked:                         {0}'.format((statusword[0] & (1 << 1 ))>>1))
+            print('Bit 00: Access to the EEPROM non-volatile memory in progress:  {0}'.format(statusword[0] & 1))
+            print('------------------------------------------------------------------')
+            print('Additional information')
+            print('------------------------------------------------------------------')
+            print('Origin of command: {0}'.format(cmd_origin[origin]))
+            print('------------------------------------------------------------------')
+            print('Bit 02: if 0 The drive is not in fault state or a fault is present')
+            print('if 1 Drive is in fault state but the fault is no longer present')
+        
+        print('------------------------------------------------------------------')
+        # show ext statusword 1
+        if not statusword[1]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 1))
+        else:
+            statusword[1] = int.from_bytes(statusword[1], 'little')
+            print("[ATV71:{1}] The Extended statusword 1 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[1], sys._getframe().f_code.co_name))
+            print('Bit 15: The "traverse control" function is active:             {0}'.format((statusword[1] & (1 << 15))>>15))
+            print('Bit 14: Drive thermal state threshold reached:                 {0}'.format((statusword[1] & (1 << 14))>>14))
+            print('Bit 13: Second frequency threshold reached:                    {0}'.format((statusword[1] & (1 << 13))>>13))
+            print('Bit 12: 4-20 mA alarm on analog input AI2:                     {0}'.format((statusword[1] & (1 << 12))>>12))
+            print('Bit 11: PID regulator feedback alarm:                          {0}'.format((statusword[1] & (1 << 11))>>11))
+            print('Bit 10: PID regulator error alarm:                             {0}'.format((statusword[1] & (1 << 10))>>10))
+            print('Bit 09: Brake contactor command active:                        {0}'.format((statusword[1] & (1 << 9 ))>>9))
+            print('Bit 08: Motor 1 thermal state threshold reached:               {0}'.format((statusword[1] & (1 << 8 ))>>8))
+            print('Bit 07: Frequency reference reached:                           {0}'.format((statusword[1] & (1 << 7 ))>>7))
+            print('Bit 06: Current threshold reached:                             {0}'.format((statusword[1] & (1 << 6 ))>>6))
+            print('Bit 05: High speed reached:                                    {0}'.format((statusword[1] & (1 << 5 ))>>5))
+            print('Bit 04: Freq. Threashold reached:                              {0}'.format((statusword[1] & (1 << 4 ))>>4))
+            print('Bit 03: The output contactor is controlled:                    {0}'.format((statusword[1] & (1 << 3 ))>>3))
+            print('Bit 02: [0 Drive locked | 1 Unlocked]:                         {0}'.format((statusword[1] & (1 << 2 ))>>2))
+            print('Bit 01: Drive is on Fault state:                               {0}'.format((statusword[1] & (1 << 1 ))>>1))
+            print('Bit 00: Reserved:                                              {0}'.format(statusword[1] & 1))
+        
+        print('------------------------------------------------------------------')
+        # show ext statusword 2
+        if not statusword[2]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 2))
+        else:
+            statusword[2] = int.from_bytes(statusword[2], 'little')
+            print("[ATV71:{1}] The Extended statusword 2 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[2], sys._getframe().f_code.co_name))
+            print('Bit 15: Reserved:                                              {0}'.format((statusword[2] & (1 << 15))>>15))
+            print('Bit 14: Reserved:                                              {0}'.format((statusword[2] & (1 << 14))>>14))
+            print('Bit 13: Reserved:                                              {0}'.format((statusword[2] & (1 << 13))>>13))
+            print('Bit 12: Reserved:                                              {0}'.format((statusword[2] & (1 << 12))>>12))
+            print('Bit 11: Reserved:                                              {0}'.format((statusword[2] & (1 << 11))>>11))
+            print('Bit 10: Reserved:                                              {0}'.format((statusword[2] & (1 << 10))>>10))
+            print('Bit 09: Reserved:                                              {0}'.format((statusword[2] & (1 << 9 ))>>9))
+            print('Bit 08: Reserved:                                              {0}'.format((statusword[2] & (1 << 8 ))>>8))
+            print('Bit 07: Reserved:                                              {0}'.format((statusword[2] & (1 << 7 ))>>7))
+            print('Bit 06: Reserved:                                              {0}'.format((statusword[2] & (1 << 6 ))>>6))
+            print('Bit 05: Reserved:                                              {0}'.format((statusword[2] & (1 << 5 ))>>5))
+            print('Bit 04: Reserved:                                              {0}'.format((statusword[2] & (1 << 4 ))>>4))
+            print('Bit 03: Reserved:                                              {0}'.format((statusword[2] & (1 << 3 ))>>3))
+            print('Bit 02: Reserved:                                              {0}'.format((statusword[2] & (1 << 2 ))>>2))
+            print('Bit 01: Reserved:                                              {0}'.format((statusword[2] & (1 << 1 ))>>1))
+            print('Bit 00: Reserved:                                              {0}'.format(statusword[2] & 1))
+
+        print('------------------------------------------------------------------')
+        # show ext statusword 3
+        if not statusword[3]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 3))
+        else:
+            statusword[3] = int.from_bytes(statusword[3], 'little')
+            print("[ATV71:{1}] The Extended statusword 3 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[3], sys._getframe().f_code.co_name))
+            print('Bit 15: Output torque [0 positive | 1 negative]:               {0}'.format((statusword[3] & (1 << 15))>>15))
+            print('Bit 14: Reserved:                                              {0}'.format((statusword[3] & (1 << 14))>>14))
+            print('Bit 13: Reserved:                                              {0}'.format((statusword[3] & (1 << 13))>>13))
+            print('Bit 12: Reserved:                                              {0}'.format((statusword[3] & (1 << 12))>>12))
+            print('Bit 11: Reserved:                                              {0}'.format((statusword[3] & (1 << 11))>>11))
+            print('Bit 10: Reserved:                                              {0}'.format((statusword[3] & (1 << 10))>>10))
+            print('Bit 09: Stop on low speed time limit function:                 {0}'.format((statusword[3] & (1 << 9 ))>>9))
+            print('Bit 08: 24 VDC external power supply present:                  {0}'.format((statusword[3] & (1 << 8 ))>>8))
+            print('Bit 07: Reserved:                                              {0}'.format((statusword[3] & (1 << 7 ))>>7))
+            print('Bit 06: Motor 3 thermal state threshold reached:               {0}'.format((statusword[3] & (1 << 6 ))>>6))
+            print('Bit 05: Motor 2 thermal state threshold reached:               {0}'.format((statusword[3] & (1 << 5 ))>>5))
+            print('Bit 04: Reserved:                                              {0}'.format((statusword[3] & (1 << 4 ))>>4))
+            print('Bit 03: [0 Current limit 1 active | 1 Current limit 2 active ]:{0}'.format((statusword[3] & (1 << 3 ))>>3))
+            print('Bit 02: [0 Ramp set 1 | 1 Ramp set 2 ]:                        {0}'.format((statusword[3] & (1 << 2 ))>>2))
+            print('Bit 01: [0 Com. act. channel 1 | 1 Com. act. channel 2 ]:      {0}'.format((statusword[3] & (1 << 1 ))>>1))
+            print('Bit 00: [0 Ref. act. channel 1(b) | 1 Ref. act. channel 2 ]:   {0}'.format(statusword[3] & 1))
+        print('------------------------------------------------------------------')
+        # show ext statusword 4
+        if not statusword[4]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 4))
+        else:
+            statusword[4] = int.from_bytes(statusword[4], 'little')
+            print("[ATV71:{1}] The Extended statusword 4 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[4], sys._getframe().f_code.co_name))
+            print('Bit 15: Fast stop in progress:                                 {0}'.format((statusword[4] & (1 << 15))>>15))
+            print('Bit 14: Deceleration in progress:                              {0}'.format((statusword[4] & (1 << 14))>>14))
+            print('Bit 13: Acceleration in progress:                              {0}'.format((statusword[4] & (1 << 13))>>13))
+            print('Bit 12: Current limiting in progress:                          {0}'.format((statusword[4] & (1 << 12))>>12))
+            print('Bit 11: DC injection braking:                                  {0}'.format((statusword[4] & (1 << 11))>>11))
+            print('Bit 10: The motor is "fluxed":                                 {0}'.format((statusword[4] & (1 << 10))>>10))
+            print('Bit 09: Motor "fluxing" in progress:                           {0}'.format((statusword[4] & (1 << 9 ))>>9))
+            print('Bit 08: Power section [0 present | 1 absent]                   {0}'.format((statusword[4] & (1 << 8 ))>>8))
+            print('Bit 07: Reserved:                                              {0}'.format((statusword[4] & (1 << 7 ))>>7))
+            print('Bit 06: Parameter set 3 is active:                             {0}'.format((statusword[4] & (1 << 6 ))>>6))
+            print('Bit 05: Parameter set 2 is active:                             {0}'.format((statusword[4] & (1 << 5 ))>>5))
+            print('Bit 04: Parameter set 1 is active:                             {0}'.format((statusword[4] & (1 << 4 ))>>4))
+            print('Bit 03: Reserved:                                              {0}'.format((statusword[4] & (1 << 3 ))>>3))
+            print('Bit 02: Configuration 2 is active:                             {0}'.format((statusword[4] & (1 << 2 ))>>2))
+            print('Bit 01: Configuration 1 is active:                             {0}'.format((statusword[4] & (1 << 1 ))>>1))
+            print('Bit 00: Configuration 0 is active:                             {0}'.format(statusword[4] & 1))
+        print('------------------------------------------------------------------')
+        # show ext statusword 5
+        #: TODO
+        if not statusword[5]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 5))
+        else:
+            statusword[5] = int.from_bytes(statusword[5], 'little')
+            print("[ATV71:{1}] The Extended statusword 5 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[5], sys._getframe().f_code.co_name))
+            print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[5] & (1 << 15))>>15))
+            print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[5] & (1 << 14))>>14))
+            print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[5] & (1 << 13))>>13))
+            print('Bit 12: Fast Stop:                                             {0}'.format((statusword[5] & (1 << 12))>>12))
+            print('Bit 11: Current or torque limit active:                        {0}'.format((statusword[5] & (1 << 11))>>11))
+            print('Bit 10: Deceleration in progress:                              {0}'.format((statusword[5] & (1 << 10))>>10))
+            print('Bit 09: Accelereation in progress:                             {0}'.format((statusword[5] & (1 << 9 ))>>9))
+            print('Bit 08: Overbraking:                                           {0}'.format((statusword[5] & (1 << 8 ))>>8))
+            print('Bit 07: Motor Thermal:                                         {0}'.format((statusword[5] & (1 << 7 ))>>7))
+            print('Bit 06: [0 Steady sate | 1 Transient state]:                   {0}'.format((statusword[5] & (1 << 6 ))>>6))
+            print('Bit 05: DC injection breaking:                                 {0}'.format((statusword[5] & (1 << 5 ))>>5))
+            print('Bit 04: Power supply present ([0 no Run | 1 Run]):             {0}'.format((statusword[5] & (1 << 4 ))>>4))
+            print('Bit 03: Reserved:                                              {0}'.format((statusword[5] & (1 << 3 ))>>3))
+            print('Bit 02: see description                                        {0}'.format((statusword[5] & (1 << 2 ))>>2))
+            print('Bit 01: Parameter consistency checked:                         {0}'.format((statusword[5] & (1 << 1 ))>>1))
+            print('Bit 00: Reserved:                                              {0}'.format(statusword[5] & 1))
+        print('------------------------------------------------------------------')
+        # show ext statusword 6
+        #: TODO
+        if not statusword[6]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 6))
+        else:
+            statusword[6] = int.from_bytes(statusword[6], 'little')
+            print("[ATV71:{1}] The Extended statusword 6 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[6], sys._getframe().f_code.co_name))
+            print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[6] & (1 << 15))>>15))
+            print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[6] & (1 << 14))>>14))
+            print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[6] & (1 << 13))>>13))
+            print('Bit 12: Fast Stop:                                             {0}'.format((statusword[6] & (1 << 12))>>12))
+            print('Bit 11: Current or torque limit active:                        {0}'.format((statusword[6] & (1 << 11))>>11))
+            print('Bit 10: Deceleration in progress:                              {0}'.format((statusword[6] & (1 << 10))>>10))
+            print('Bit 09: Accelereation in progress:                             {0}'.format((statusword[6] & (1 << 9 ))>>9))
+            print('Bit 08: Overbraking:                                           {0}'.format((statusword[6] & (1 << 8 ))>>8))
+            print('Bit 07: Motor Thermal:                                         {0}'.format((statusword[6] & (1 << 7 ))>>7))
+            print('Bit 06: [0 Steady sate | 1 Transient state]:                   {0}'.format((statusword[6] & (1 << 6 ))>>6))
+            print('Bit 05: DC injection breaking:                                 {0}'.format((statusword[6] & (1 << 5 ))>>5))
+            print('Bit 04: Power supply present ([0 no Run | 1 Run]):             {0}'.format((statusword[6] & (1 << 4 ))>>4))
+            print('Bit 03: Reserved:                                              {0}'.format((statusword[6] & (1 << 3 ))>>3))
+            print('Bit 02: see description                                        {0}'.format((statusword[6] & (1 << 2 ))>>2))
+            print('Bit 01: Parameter consistency checked:                         {0}'.format((statusword[6] & (1 << 1 ))>>1))
+            print('Bit 00: Reserved:                                              {0}'.format(statusword[6] & 1))
+        print('------------------------------------------------------------------')
+        # show ext statusword 7
+        #: TODO
+        if not statusword[7]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 7))
+        else:
+            statusword[7] = int.from_bytes(statusword[7], 'little')
+            print("[ATV71:{1}] The Extended statusword 7 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[7], sys._getframe().f_code.co_name))
+            print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[7] & (1 << 15))>>15))
+            print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[7] & (1 << 14))>>14))
+            print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[7] & (1 << 13))>>13))
+            print('Bit 12: Fast Stop:                                             {0}'.format((statusword[7] & (1 << 12))>>12))
+            print('Bit 11: Current or torque limit active:                        {0}'.format((statusword[7] & (1 << 11))>>11))
+            print('Bit 10: Deceleration in progress:                              {0}'.format((statusword[7] & (1 << 10))>>10))
+            print('Bit 09: Accelereation in progress:                             {0}'.format((statusword[7] & (1 << 9 ))>>9))
+            print('Bit 08: Overbraking:                                           {0}'.format((statusword[7] & (1 << 8 ))>>8))
+            print('Bit 07: Motor Thermal:                                         {0}'.format((statusword[7] & (1 << 7 ))>>7))
+            print('Bit 06: [0 Steady sate | 1 Transient state]:                   {0}'.format((statusword[7] & (1 << 6 ))>>6))
+            print('Bit 05: DC injection breaking:                                 {0}'.format((statusword[7] & (1 << 5 ))>>5))
+            print('Bit 04: Power supply present ([0 no Run | 1 Run]):             {0}'.format((statusword[7] & (1 << 4 ))>>4))
+            print('Bit 03: Reserved:                                              {0}'.format((statusword[7] & (1 << 3 ))>>3))
+            print('Bit 02: see description                                        {0}'.format((statusword[7] & (1 << 2 ))>>2))
+            print('Bit 01: Parameter consistency checked:                         {0}'.format((statusword[7] & (1 << 1 ))>>1))
+            print('Bit 00: Reserved:                                              {0}'.format(statusword[7] & 1))
+        print('------------------------------------------------------------------')
+        # show ext statusword 8
+        if not statusword[8]:
+            print('[ATV71:{0}] Failed to retreive Extended statusword {1}'.format(sys._getframe().f_code.co_name, 8))
+        else:
+            statusword[8] = int.from_bytes(statusword[8], 'little')
+            print("[ATV71:{1}] The Extended statusword 8 is Hex={0:#06X} Bin={0:#018b}\n".format(
+            statusword[8], sys._getframe().f_code.co_name))
+            print('Bit 15: Driver ready:                                          {0}'.format((statusword[8] & (1 << 15))>>15))
+            print('Bit 14: Reserved:                                              {0}'.format((statusword[8] & (1 << 14))>>14))
+            print('Bit 13: Reserved:                                              {0}'.format((statusword[8] & (1 << 13))>>13))
+            print('Bit 12: Reserved:                                              {0}'.format((statusword[8] & (1 << 12))>>12))
+            print('Bit 11: Reserved:                                              {0}'.format((statusword[8] & (1 << 11))>>11))
+            print('Bit 10: Reserved:                                              {0}'.format((statusword[8] & (1 << 10))>>10))
+            print('Bit 09: Reserved:                                              {0}'.format((statusword[8] & (1 << 9 ))>>9))
+            print('Bit 08: Reserved:                                              {0}'.format((statusword[8] & (1 << 8 ))>>8))
+            print('Bit 07: Reserved:                                              {0}'.format((statusword[8] & (1 << 7 ))>>7))
+            print('Bit 06: Reserved:                                              {0}'.format((statusword[8] & (1 << 6 ))>>6))
+            print('Bit 05: Reserved:                                              {0}'.format((statusword[8] & (1 << 5 ))>>5))
+            print('Bit 04: Reserved:                                              {0}'.format((statusword[8] & (1 << 4 ))>>4))
+            print('Bit 03: Reserved:                                              {0}'.format((statusword[8] & (1 << 3 ))>>3))
+            print('Bit 02: Reserved:                                              {0}'.format((statusword[8] & (1 << 2 ))>>2))
+            print('Bit 01: Reserved:                                              {0}'.format((statusword[8] & (1 << 1 ))>>1))
+            print('Bit 00: Reserved:                                              {0}'.format(statusword[8] & 1))
+        print('------------------------------------------------------------------')
         return
 
     def printControlWord(self, controlword=None):
