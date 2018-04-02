@@ -63,3 +63,5 @@ Scripts/
 pyvenv.cfg
 
 test_finally\.py
+
+\.vscode/
