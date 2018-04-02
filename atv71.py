@@ -56,6 +56,11 @@ class ATV71:
                   0x0f00ffbc:  'Error code: device not in service mode',
                   0x0f00ffB9:  'Error code: error in Node-ID'
                   }
+    state = {0: 'start', 1: 'not ready to switch on', 2: 'switch on disable',
+             3: 'ready to switch on', 4: 'switched on', 5: 'refresh',
+             6: 'measure init', 7: 'operation enable', 8: 'quick stop active',
+             9: 'fault reaction active (disabled)', 10: 'fault reaction active (enable)', 11: 'fault',
+             -1: 'Unknown'}
 
     def __init__(self, _network=None, debug=False):
         # check if network is passed over or create a new one
@@ -160,7 +165,7 @@ class ATV71:
     #------------------------------------------------------------------------------
     def readStatusWord(self):
         try:
-            statusword = self.node.sdo.upload['Statusword'].raw
+            statusword = self.node.sdo['Statusword'].raw
             return statusword, True
         
         except canopen.SdoAbortedError as e:
@@ -173,9 +178,25 @@ class ATV71:
             self.logger.info('[ATV71:{0}] SdoAbortedError: Timeout or unexpected response'.format(sys._getframe().f_code.co_name))
             return None, False
 
+
+    def writeControlWord(self, controlword):
+        '''Send controlword to device
+
+        Args:
+            controlword: word to be sent.
+
+        Returns:
+            bool: a boolean if all went ok.
+        '''
+        # sending new controlword
+        self.logger.debug('[ATV:{0}] Sending controlword Hex={1:#06X} Bin={1:#018b}'.format(
+            sys._getframe().f_code.co_name, controlword))
+        controlword = controlword.to_bytes(2, 'little')
+        return self.writeObject(0x6040, 0, controlword)
+
     def readControlWord(self):
         try:
-            controlword = self.node.sdo.upload['Controlword'].raw
+            controlword = self.node.sdo['Controlword'].raw
             return controlword, True
         
         except canopen.SdoAbortedError as e:
@@ -188,6 +209,251 @@ class ATV71:
             self.logger.info('[ATV71:{0}] SdoAbortedError: Timeout or unexpected response'.format(sys._getframe().f_code.co_name))
             return None, False
     
+    
+    def changeATVState(self, newState):
+        '''Change ATV state
+
+        Change ATV state using controlWord object
+
+        To change ATV state, a write to controlWord object is made.
+        The bit change in controlWord is made as shown in the following table:
+
+        +-------------------+--------------------------------+
+        | State             | LowByte of Controlword [binary]|
+        +===================+================================+
+        | shutdown          | 0xxx x110                      |
+        +-------------------+--------------------------------+
+        | switch on         | 0xxx x111                      |
+        +-------------------+--------------------------------+
+        | disable voltage   | 0xxx xx0x                      |
+        +-------------------+--------------------------------+
+        | quick stop        | 0xxx x01x                      |
+        +-------------------+--------------------------------+
+        | disable operation | 0xxx 0111                      |
+        +-------------------+--------------------------------+
+        | enable operation  | 0xxx 1111                      |
+        +-------------------+--------------------------------+
+        | fault reset       | 1xxx xxxx                      |
+        +-------------------+--------------------------------+
+
+        see section 8.1.3 of firmware for more information
+
+        Args:
+            newState: string with state witch user want to switch.
+
+        Returns:
+            bool: boolean if all went ok and no error was received.
+        '''
+        stateOrder = ['shutdown', 'switch on', 'disable voltage', 'quick stop',
+                      'disable operation', 'enable operation', 'fault reset']
+
+        if not (newState in stateOrder):
+            logging.info('[ATV:{0}] Unkown state: {1}'.format(sys._getframe().f_code.co_name, newState))
+            return False
+        else:
+            controlword, Ok = self.readControlWord()
+            if not Ok:
+                logging.info('[ATV:{0}] Failed to retreive controlword'.format(sys._getframe().f_code.co_name))
+                return False
+            # shutdown  0xxx x110
+            if newState == 'shutdown':
+                # clear bits
+                mask = not ( 1<<7 | 1<<0 )
+                controlword = controlword & mask
+                # set bits
+                mask  = ( 1<< 2 | 1<<1 )
+                controlword = controlword | mask
+                return self.writeControlWord(controlword)
+            # switch on 0xxx x111
+            if newState == 'switch on':
+                # clear bits
+                mask = not ( 1<<7 )
+                controlword = controlword & mask
+                # set bits
+                mask  = ( 1<< 2 | 1<<1 | 1<<0 )
+                controlword = controlword | mask
+                return self.writeControlWord(controlword)
+            # disable voltage 0xxx xx0x
+            if newState == 'switch on':
+                # clear bits
+                mask = not ( 1<<7 | 1 << 1 )
+                controlword = controlword & mask
+                return self.writeControlWord(controlword)
+            # quick stop 0xxx x01x
+            if newState == 'quick stop':
+                # clear bits
+                mask = not ( 1<<7 | 1 << 2)
+                controlword = controlword & mask
+                # set bits
+                mask  = ( 1<<1 )
+                controlword = controlword | mask
+                return self.writeControlWord(controlword)
+            # disable operation 0xxx 0111
+            if newState == 'disable operation':
+                # clear bits
+                mask = not ( 1<<7 | 1 << 3)
+                controlword = controlword & mask
+                # set bits
+                mask  = ( 1<<2 | 1<< 1 | 1<<0 )
+                controlword = controlword | mask
+                return self.writeControlWord(controlword)
+            # enable operation 0xxx 1111
+            if newState == 'enable operation':
+                # clear bits
+                mask = not ( 1<<7 )
+                controlword = controlword & mask
+                # set bits
+                mask  = ( 1<< 3 | 1 << 2 | 1 << 1 | 1 << 0 )
+                controlword = controlword | mask
+                return self.writeControlWord(controlword)
+            # fault reset 1xxx xxxx
+            if newState == 'fault reset':
+                # set bits
+                mask  = ( 1<<7 )
+                controlword = controlword | mask
+                return self.writeControlWord(controlword)
+
+
+    def checkATVState(self):
+        '''Check current state of ATV
+
+        Ask the StatusWord of ATV and parse it to return the current state of ATV.
+
+        +----------------------------------+-----+---------------------+
+        | State                            | ID  | Statusword [binary] |
+        +==================================+=====+=====================+
+        | Start                            | 0   | x0xx xxx0  x000 0000|
+        +----------------------------------+-----+---------------------+
+        | Not Ready to Switch On           | 1   | x0xx xxx1  x000 0000|
+        +----------------------------------+-----+---------------------+
+        | Switch on disabled               | 2   | x0xx xxx1  x100 0000|
+        +----------------------------------+-----+---------------------+
+        | ready to switch on               | 3   | x0xx xxx1  x010 0001|
+        +----------------------------------+-----+---------------------+
+        | switched on                      | 4   | x0xx xxx1  x010 0011|
+        +----------------------------------+-----+---------------------+
+        | refresh                          | 5   | x1xx xxx1  x010 0011|
+        +----------------------------------+-----+---------------------+
+        | measure init                     | 6   | x1xx xxx1  x011 0011|
+        +----------------------------------+-----+---------------------+
+        | operation enable                 | 7   | x0xx xxx1  x011 0111|
+        +----------------------------------+-----+---------------------+
+        | quick stop active                | 8   | x0xx xxx1  x001 0111|
+        +----------------------------------+-----+---------------------+
+        | fault reaction active (disabled) | 9   | x0xx xxx1  x000 1111|
+        +----------------------------------+-----+---------------------+
+        | fault reaction active (enabled)  | 10  | x0xx xxx1  x001 1111|
+        +----------------------------------+-----+---------------------+
+        | Fault                            | 11  | x0xx xxx1  x000 1000|
+        +----------------------------------+-----+---------------------+
+
+        see section 8.1.1 of firmware manual for more details.
+
+        Returns:
+            int: numeric identification of the state or -1 in case of fail.
+		'''
+        statusword, ok = self.readStatusWord()
+        if not ok:
+            self.logger.info('[ATV:{0}] Failed to request StatusWord\n'.format(
+                sys._getframe().f_code.co_name))
+        else:
+
+            # state 'start' (0)
+			# statusWord == x0xx xxx0  x000 0000
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 0):
+                ID = 0
+                return ID
+
+		# state 'not ready to switch on' (1)
+		# statusWord == x0xx xxx1  x000 0000
+            bitmask = 0b0100000101111111
+            if (bitmask & statusword == 256):
+            	ID = 1
+            	return ID
+
+            # state 'switch on disabled' (2)
+            # statusWord == x0xx xxx1  x100 0000
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 320):
+            	ID = 2
+            	return ID
+
+            # state 'ready to switch on' (3)
+            # statusWord == x0xx xxx1  x010 0001
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 289):
+            	ID = 3
+            	return ID
+
+            # state 'switched on' (4)
+            # statusWord == x0xx xxx1  x010 0011
+            bitmask = 0b0000000101111111
+            if(bitmask & statusword == 291):
+            	ID = 4
+            	return ID
+
+            # state 'refresh' (5)
+            # statusWord == x1xx xxx1  x010 0011
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 16675):
+            	ID = 5
+            	return ID
+
+            # state 'measure init' (6)
+            # statusWord == x1xx xxx1  x011 0011
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 16691):
+            	ID = 6
+            	return ID
+            # state 'operation enable' (7)
+            # statusWord == x0xx xxx1  x011 0111
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 311):
+            	ID = 7
+            	return ID
+
+            # state 'Quick Stop Active' (8)
+            # statusWord == x0xx xxx1  x001 0111
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 279):
+            	ID = 8
+            	return ID
+
+            # state 'fault reaction active (disabled)' (9)
+            # statusWord == x0xx xxx1  x000 1111
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 271):
+            	ID = 9
+            	return ID
+
+            # state 'fault reaction active (enabled)' (10)
+            # statusWord == x0xx xxx1  x001 1111
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 287):
+            	ID = 10
+            	return ID
+
+            # state 'fault' (11)
+            # statusWord == x0xx xxx1  x000 1000
+            bitmask = 0b0100000101111111
+            if(bitmask & statusword == 264):
+            	ID = 11
+            	return ID
+
+        # in case of unknown state or fail
+        return -1
+
+    def printATVState (self):
+        ID = self.checkATVState()
+        if ID is -1:
+            print('[ATV:{0}] Error: Unknown state\n'.format(sys._getframe().f_code.co_name))
+        else:
+            print('[ATV:{0}] Current state [ID]:{1} [{2}]\n'.format( sys._getframe().f_code.co_name, self.state[ID], ID))
+        return
+
+
+
     def printStatusWord(self):
         statusword, Ok = self.readStatusWord()
         if not Ok:
@@ -227,9 +493,9 @@ class ATV71:
         if not controlword:
             controlword, Ok = self.readControlWord()
             if not Ok:
-                print('[Epos:{0}] Failed to retreive controlword\n'.format(sys._getframe().f_code.co_name))
+                print('[ATV:{0}] Failed to retreive controlword\n'.format(sys._getframe().f_code.co_name))
                 return
-        print("[Epos:{1}] The controlword is Hex={0:#06X} Bin={0:#018b}\n".format(
+        print("[ATV:{1}] The controlword is Hex={0:#06X} Bin={0:#018b}\n".format(
             controlword, sys._getframe().f_code.co_name))
         
         print('Bit 15: Can be assigned to command:                     {0}'.format((controlword & (1 << 15 ))>>15))
