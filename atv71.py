@@ -400,7 +400,6 @@ class ATV71:
         | Fault                            | 11  | x0xx xxx1  x000 1000|
         +----------------------------------+-----+---------------------+
 
-        see section 8.1.1 of firmware manual for more details.
 
         Returns:
             int: numeric identification of the state or -1 in case of fail.
@@ -550,6 +549,10 @@ class ATV71:
         return
 
     def printAllStatusWords(self):
+        '''Print all statuswords
+
+        Request all statuswords and print the meaning of them
+        '''
         print('------------------------------------------------------------------')
         self.printStatusWord()
         print('------------------------------------------------------------------')
@@ -711,7 +714,6 @@ class ATV71:
             print('Bit 00: Configuration 0 is active:                             {0}'.format(statusword[4] & 1))
         print('------------------------------------------------------------------')
         # show ext statusword 5
-        #: TODO
         if not statusword[5]:
             print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
                 self.__class__.__name__,
@@ -722,25 +724,24 @@ class ATV71:
                 self.__class__.__name__,
                 sys._getframe().f_code.co_name,
                 statusword[5]))
-            print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[5] & (1 << 15))>>15))
-            print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[5] & (1 << 14))>>14))
-            print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[5] & (1 << 13))>>13))
-            print('Bit 12: Fast Stop:                                             {0}'.format((statusword[5] & (1 << 12))>>12))
-            print('Bit 11: Current or torque limit active:                        {0}'.format((statusword[5] & (1 << 11))>>11))
-            print('Bit 10: Deceleration in progress:                              {0}'.format((statusword[5] & (1 << 10))>>10))
-            print('Bit 09: Accelereation in progress:                             {0}'.format((statusword[5] & (1 << 9 ))>>9))
-            print('Bit 08: Overbraking:                                           {0}'.format((statusword[5] & (1 << 8 ))>>8))
-            print('Bit 07: Motor Thermal:                                         {0}'.format((statusword[5] & (1 << 7 ))>>7))
-            print('Bit 06: [0 Steady sate | 1 Transient state]:                   {0}'.format((statusword[5] & (1 << 6 ))>>6))
-            print('Bit 05: DC injection breaking:                                 {0}'.format((statusword[5] & (1 << 5 ))>>5))
-            print('Bit 04: Power supply present ([0 no Run | 1 Run]):             {0}'.format((statusword[5] & (1 << 4 ))>>4))
-            print('Bit 03: Reserved:                                              {0}'.format((statusword[5] & (1 << 3 ))>>3))
-            print('Bit 02: see description                                        {0}'.format((statusword[5] & (1 << 2 ))>>2))
-            print('Bit 01: Parameter consistency checked:                         {0}'.format((statusword[5] & (1 << 1 ))>>1))
-            print('Bit 00: Reserved:                                              {0}'.format(statusword[5] & 1))
+            print('Bit 15: Reserved:                                              {0}'.format((statusword[5] & (1 << 15))>>15))
+            print('Bit 14: limit stops are reached:                               {0}'.format((statusword[5] & (1 << 14))>>14))
+            print('Bit 13: Current present in the motor:                          {0}'.format((statusword[5] & (1 << 13))>>13))
+            print('Bit 12: Reserved:                                              {0}'.format((statusword[5] & (1 << 12))>>12))
+            print('Bit 11: Reserved:                                              {0}'.format((statusword[5] & (1 << 11))>>11))
+            print('Bit 10: Reserved:                                              {0}'.format((statusword[5] & (1 << 10))>>10))
+            print('Bit 09: The line contactor is active:                          {0}'.format((statusword[5] & (1 << 9 ))>>9))
+            print('Bit 08: Reserved:                                              {0}'.format((statusword[5] & (1 << 8 ))>>8))
+            print('Bit 07: Controlled output cut in progress:                     {0}'.format((statusword[5] & (1 << 7 ))>>7))
+            print('Bit 06: The drive cannot follow the config. deceleration ramp: {0}'.format((statusword[5] & (1 << 6 ))>>6))
+            print('Bit 05: Controlled stop in progress:                           {0}'.format((statusword[5] & (1 << 5 ))>>5))
+            print('Bit 04: Auto-tuning in progress:                               {0}'.format((statusword[5] & (1 << 4 ))>>4))
+            print('Bit 03: Automatic restart attempts in progress:                {0}'.format((statusword[5] & (1 << 3 ))>>3))
+            print('Bit 02: The "Power removal" function is active                 {0}'.format((statusword[5] & (1 << 2 ))>>2))
+            print('Bit 01: Drive braking:                                         {0}'.format((statusword[5] & (1 << 1 ))>>1))
+            print('Bit 00: Drive DC bus loading:                                  {0}'.format(statusword[5] & 1))
         print('------------------------------------------------------------------')
         # show ext statusword 6
-        #: TODO
         if not statusword[6]:
             print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
                 self.__class__.__name__,
@@ -751,25 +752,24 @@ class ATV71:
                 self.__class__.__name__,
                 sys._getframe().f_code.co_name,
                 statusword[6]))
-            print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[6] & (1 << 15))>>15))
-            print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[6] & (1 << 14))>>14))
-            print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[6] & (1 << 13))>>13))
-            print('Bit 12: Fast Stop:                                             {0}'.format((statusword[6] & (1 << 12))>>12))
-            print('Bit 11: Current or torque limit active:                        {0}'.format((statusword[6] & (1 << 11))>>11))
-            print('Bit 10: Deceleration in progress:                              {0}'.format((statusword[6] & (1 << 10))>>10))
-            print('Bit 09: Accelereation in progress:                             {0}'.format((statusword[6] & (1 << 9 ))>>9))
-            print('Bit 08: Overbraking:                                           {0}'.format((statusword[6] & (1 << 8 ))>>8))
-            print('Bit 07: Motor Thermal:                                         {0}'.format((statusword[6] & (1 << 7 ))>>7))
-            print('Bit 06: [0 Steady sate | 1 Transient state]:                   {0}'.format((statusword[6] & (1 << 6 ))>>6))
-            print('Bit 05: DC injection breaking:                                 {0}'.format((statusword[6] & (1 << 5 ))>>5))
-            print('Bit 04: Power supply present ([0 no Run | 1 Run]):             {0}'.format((statusword[6] & (1 << 4 ))>>4))
-            print('Bit 03: Reserved:                                              {0}'.format((statusword[6] & (1 << 3 ))>>3))
-            print('Bit 02: see description                                        {0}'.format((statusword[6] & (1 << 2 ))>>2))
-            print('Bit 01: Parameter consistency checked:                         {0}'.format((statusword[6] & (1 << 1 ))>>1))
-            print('Bit 00: Reserved:                                              {0}'.format(statusword[6] & 1))
+            print('Bit 15: Current or torque limit alarm after time-out:          {0}'.format((statusword[6] & (1 << 15))>>15))
+            print('Bit 14: Brake contact alarm in the brake control sequence:     {0}'.format((statusword[6] & (1 << 14))>>14))
+            print('Bit 13: Speed alarm in the brake control sequence:             {0}'.format((statusword[6] & (1 << 13))>>13))
+            print('Bit 12: Reserved:                                              {0}'.format((statusword[6] & (1 << 12))>>12))
+            print('Bit 11: Drive overheat alarm:                                  {0}'.format((statusword[6] & (1 << 11))>>11))
+            print('Bit 10: Slipping alarm:                                        {0}'.format((statusword[6] & (1 << 10))>>10))
+            print('Bit 09: Line supply loss detection:                            {0}'.format((statusword[6] & (1 << 9 ))>>9))
+            print('Bit 08: Undervoltage alarm:                                    {0}'.format((statusword[6] & (1 << 8 ))>>8))
+            print('Bit 07: External Fault:                                        {0}'.format((statusword[6] & (1 << 7 ))>>7))
+            print('Bit 06: Reserved:                                              {0}'.format((statusword[6] & (1 << 6 ))>>6))
+            print('Bit 05: LI6 PTC probe alarm:                                   {0}'.format((statusword[6] & (1 << 5 ))>>5))
+            print('Bit 04: PTC Probe alarm 2:                                     {0}'.format((statusword[6] & (1 << 4 ))>>4))
+            print('Bit 03: PTC Probe alarm 1:                                     {0}'.format((statusword[6] & (1 << 3 ))>>3))
+            print('Bit 02: Alarm group 3:                                         {0}'.format((statusword[6] & (1 << 2 ))>>2))
+            print('Bit 01: Alarm group 2:                                         {0}'.format((statusword[6] & (1 << 1 ))>>1))
+            print('Bit 00: Alarm group 1:                                         {0}'.format(statusword[6] & 1))
         print('------------------------------------------------------------------')
         # show ext statusword 7
-        #: TODO
         if not statusword[7]:
             print('[{0}:{1}] Failed to retreive Extended statusword {2}'.format(
                 self.__class__.__name__,
@@ -780,22 +780,22 @@ class ATV71:
                 self.__class__.__name__,
                 sys._getframe().f_code.co_name,
                 statusword[7]))
-            print('Bit 15: Operation before ramp [0 Foward | 1 Reverse]:          {0}'.format((statusword[7] & (1 << 15))>>15))
-            print('Bit 14: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[7] & (1 << 14))>>14))
-            print('Bit 13: bit 13 and 14 describes  origin of command:            {0}'.format((statusword[7] & (1 << 13))>>13))
-            print('Bit 12: Fast Stop:                                             {0}'.format((statusword[7] & (1 << 12))>>12))
-            print('Bit 11: Current or torque limit active:                        {0}'.format((statusword[7] & (1 << 11))>>11))
-            print('Bit 10: Deceleration in progress:                              {0}'.format((statusword[7] & (1 << 10))>>10))
-            print('Bit 09: Accelereation in progress:                             {0}'.format((statusword[7] & (1 << 9 ))>>9))
-            print('Bit 08: Overbraking:                                           {0}'.format((statusword[7] & (1 << 8 ))>>8))
-            print('Bit 07: Motor Thermal:                                         {0}'.format((statusword[7] & (1 << 7 ))>>7))
-            print('Bit 06: [0 Steady sate | 1 Transient state]:                   {0}'.format((statusword[7] & (1 << 6 ))>>6))
-            print('Bit 05: DC injection breaking:                                 {0}'.format((statusword[7] & (1 << 5 ))>>5))
-            print('Bit 04: Power supply present ([0 no Run | 1 Run]):             {0}'.format((statusword[7] & (1 << 4 ))>>4))
-            print('Bit 03: Reserved:                                              {0}'.format((statusword[7] & (1 << 3 ))>>3))
-            print('Bit 02: see description                                        {0}'.format((statusword[7] & (1 << 2 ))>>2))
-            print('Bit 01: Parameter consistency checked:                         {0}'.format((statusword[7] & (1 << 1 ))>>1))
-            print('Bit 00: Reserved:                                              {0}'.format(statusword[7] & 1))
+            print('Bit 15: Reserved:                                              {0}'.format((statusword[7] & (1 << 15))>>15))
+            print('Bit 14: Reserved:                                              {0}'.format((statusword[7] & (1 << 14))>>14))
+            print('Bit 13: DC bus precharging contactor controlled:               {0}'.format((statusword[7] & (1 << 13))>>13))
+            print('Bit 12: 4-20 mA alarm on analog input AI4:                     {0}'.format((statusword[7] & (1 << 12))>>12))
+            print('Bit 11: 4-20 mA alarm on analog input AI3:                     {0}'.format((statusword[7] & (1 << 11))>>11))
+            print('Bit 10: Alarm sent by the "Controller Inside" card:            {0}'.format((statusword[7] & (1 << 10))>>10))
+            print('Bit 09: Braking resistor overload alarm:                       {0}'.format((statusword[7] & (1 << 9 ))>>9))
+            print('Bit 08: IGBT thermal state alarm:                              {0}'.format((statusword[7] & (1 << 8 ))>>8))
+            print('Bit 07: Torque regulation alarm:                               {0}'.format((statusword[7] & (1 << 7 ))>>7))
+            print('Bit 06: Master-slave synchronization:                          {0}'.format((statusword[7] & (1 << 6 ))>>6))
+            print('Bit 05: Spool end:                                             {0}'.format((statusword[7] & (1 << 5 ))>>5))
+            print('Bit 04: Reference channel 1B is active:                        {0}'.format((statusword[7] & (1 << 4 ))>>4))
+            print('Bit 03: Command channel 2 is active:                           {0}'.format((statusword[7] & (1 << 3 ))>>3))
+            print('Bit 02: Command channel 1 is active:                           {0}'.format((statusword[7] & (1 << 2 ))>>2))
+            print('Bit 01:  Reference channel 2 is active                         {0}'.format((statusword[7] & (1 << 1 ))>>1))
+            print('Bit 00:  Reference channel 1 or 1b is active                   {0}'.format(statusword[7] & 1))
         print('------------------------------------------------------------------')
         # show ext statusword 8
         if not statusword[8]:
@@ -867,6 +867,171 @@ class ATV71:
         print('Bit 00: Switch on:                                      {0}'.format(controlword & 1))
         return
 
+    # will be using dictionary object for now
+    def readMotorConfig(self):
+        '''
+        TODO
+        '''
+        # menu of motor config settings in display
+        # create an empty dictionary
+        motorConfig = []
+        # convert from HP to kW
+        HPtokW = 75
+        # control type enum
+        controlType = ('[SVC V]: Open-loop voltage flux vector control',
+                       '[SVC I]: Open-loop current flux vector control',
+                       '[FVC]: Closed-loop current flux vector control for motor with incremental encoder type sensor',
+                       '[V/F 2pts]: Simple V/F profile without slip compensation',
+                       '[V/F 5pts]: 5-segment V/F profile',
+                       '[Sync. mot.]: For synchronous permanent magnet motors with sinusoidal electromotive force (EMF) only')
+        try:
+            # request standard motor frequency
+            motorFreq = self.readObject(0x2000, 0x10)
+            if motorFreq is None:
+                self.logger.info('[{0}:{1}] Failed to request standar motor frequency'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name))
+                return None, False
+            if motorFreq == 1:
+                motorConfig.append({'MotorFreq':'60Hz NEMA'})
+            else:
+                motorConfig.append({'MotorFreq':'50Hz IEC'})
+            # request rated motor power
+            aux = self.readObject(0x2042, 0xE)
+            if aux is None:
+                self.logger.info('[{0}:{1}] Failed to request rated motor power'.format(
+                self.__class__.__name__,
+                sys._getframe().f_code.co_name))
+                return None, False
+            aux = int.from_bytes(aux, 'little')
+            # scale value is dependent on the motorFreq value
+            # if motorFreq is 1, unit is  0.1 HP
+            # if motorFreq is 0 and if power > 75 kW: Unit = 1 kW
+            # If motorFreq is 0 and if power ≤ 75 kW: Unit = 0.01 kW
+            if motorFreq == 1:
+                motorConfig.append({'Rated motor power [HP]': aux * 0.1})
+            else:
+                motorConfig.append({'Rated motor power [HP]': (aux * 0.01) / HPtokW})
+            # request nominal motor voltage
+            aux = self.readObject(0x2042, 0x2)
+            if aux is None:
+                self.logger.info('[{0}:{1}] Failed to request rated motor voltage'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
+                return None, False
+            aux = int.from_bytes(aux, 'little')
+            motorConfig.append({'Rated motor voltage [V]': aux })
+            # request nominal motor frequency
+            aux = self.readObject(0x2042, 0x3)
+            if aux is None:
+                self.logger.info('[{0}:{1}] Failed to request rated motor frequency'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
+                return None, False
+            aux = int.from_bytes(aux, 'little')
+            motorConfig.append({'Rated motor frequency [Hz]': aux * 0.1 })
+            # request nominal motor current
+            aux = self.readObject(0x2042, 0x4)
+            if aux is None:
+                self.logger.info('[{0}:{1}] Failed to request rated motor current'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
+                return None, False
+            aux = int.from_bytes(aux, 'little')
+            motorConfig.append({'Rated motor current [A]': aux * 0.1 })
+            
+            # request nominal motor speed
+            aux = self.readObject(0x2042, 0x5)
+            if aux is None:
+                self.logger.info('[{0}:{1}] Failed to request rated motor speed'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
+                return None, False
+            aux = int.from_bytes(aux, 'little')
+            motorConfig.append({'Rated motor speed [RPM]': aux })
+            
+            # request max. output frequency
+            aux = self.readObject(0x2001, 0x4)
+            if aux is None:
+                self.logger.info('[{0}:{1}] Failed to request Max output frequency'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
+                return None, False
+            aux = int.from_bytes(aux, 'little')
+            motorConfig.append({'Max output frequency [Hz]': aux * 0.1 })
+
+            # request motor thermal current
+
+            # request Acceleration ramp time
+
+            # request deceleration ramp time
+
+            # request motor control type
+            aux = self.readObject(0x2042, 0x8)
+            if aux is None:
+                self.logger.info('[{0}:{1}] Failed to request motor control type'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
+                return None, False
+            aux = int.from_bytes(aux, 'little')
+            motorConfig.append({'Motor control type': controlType[aux] })
+
+            # request V/F points on 5 points
+            vPoints = []
+            fPoints = []
+            swap = False
+            for I in range(2,0x10):
+                if I == 3:
+                    # f0 is zero. do nothing
+                    swap = False
+                else:
+                    aux = self.readObject(0x205E, I)
+                    if aux is None:
+                        self.logger.info('[{0}:{1}] Failed to V/F point at subindex:0x{2:02X}'.format(
+                        self.__class__.__name__,
+                        sys._getframe().f_code.co_name, I))
+                    return None, False
+                    if swap:
+                        # if a freq value
+                        aux = int.from_bytes(aux, 'little')
+                        fPoints.append(aux * 0.1)
+                        swap = False
+                    else:
+                        # if a voltage value
+                        aux = int.from_bytes(aux, 'little')
+                        vPoints.append(aux)
+                        swap = True
+
+            motorConfig.append({'V/F Voltage on 5 points': vPoints })
+            motorConfig.append({'V/F Frequency on 5 points': fPoints })            
+
+            # request frequency in constant power
+        
+            # request drive switching frequency
+
+            # request nominal motor slip
+
+            # request pole pair number
+            aux = self.readObject(0x2042, 0x49)
+            if aux is None:
+                self.logger.info('[{0}:{1}] Failed to request motor pole pairs'.format(
+                    self.__class__.__name__,
+                    sys._getframe().f_code.co_name))
+                return None, False
+            aux = int.from_bytes(aux, 'little')
+            motorConfig.append({'Motor Pole Pairs': aux })
+            # request custom stator resistence
+
+            # request custom adjust mag. current
+
+            # request custom leakage indutance
+
+            # request custom rotor t constant
+
+        except:
+            pass
+        return
+
 
 def main():
     '''Test ATV71 CANopen communication with some examples.
@@ -892,7 +1057,7 @@ def main():
                         type=int, help='bitrate, if applicable', dest='bitrate')
     parser.add_argument('--nodeID', action='store', default=2, type=int,
                         help='Node ID [ must be between 1- 127]', dest='nodeID')
-    parser.add_argument('--objDict', action='store', default='TEATV7111E.eds',
+    parser.add_argument('--objDict', action='store', default='TEATV71_01303E.eds',
                         type=str, help='Object dictionary file', dest='objDict')
     args = parser.parse_args()
 
@@ -928,9 +1093,9 @@ def main():
         print('----------------------------------------------------------', flush=True)
         for obj in atv.node.object_dictionary.values():
             print('0x%X: %s' % (obj.index, obj.name))
-        if isinstance(obj, canopen.objectdictionary.Record):
-            for subobj in obj.values():
-                print('  %d: %s' % (subobj.subindex, subobj.name))
+            if isinstance(obj, canopen.objectdictionary.Record):
+                for subobj in obj.values():
+                    print('  %d: %s' % (subobj.subindex, subobj.name))
         print('----------------------------------------------------------', flush=True)
         # test record a single record
         error_log = atv.node.sdo['Error History']
