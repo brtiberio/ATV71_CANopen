@@ -827,7 +827,7 @@ class ATV71:
         print('------------------------------------------------------------------')
         return
 
-    def printControlWord(self, controlword=None):
+    def printControlWord(self, controlword=None, dsp402=True):
         '''Print the meaning of controlword
 
         Check the meaning of current controlword of device or check the meaning of your own controlword.
@@ -848,23 +848,40 @@ class ATV71:
             self.__class__.__name__,
             sys._getframe().f_code.co_name,
             controlword))
-        
-        print('Bit 15: Can be assigned to command:                     {0}'.format((controlword & (1 << 15 ))>>15))
-        print('Bit 14: Can be assigned to command:                     {0}'.format((controlword & (1 << 14 ))>>14))
-        print('Bit 13: Can be assigned to command:                     {0}'.format((controlword & (1 << 13 ))>>13))
-        print('Bit 12: Can be assigned to command:                     {0}'.format((controlword & (1 << 12 ))>>12))
-        print('Bit 11: Direction of rotation [0 Foward | 1 Reverse]:   {0}'.format((controlword & (1 << 11 ))>>11))
-        print('Bit 10: Reserved:                                       {0}'.format((controlword & (1 << 10 ))>>10))
-        print('Bit 09: Reserved:                                       {0}'.format((controlword & (1 << 9 ))>>9))
-        print('Bit 08: Halt:                                           {0}'.format((controlword & (1 << 8 ))>>8))
-        print('Bit 07: Fault reset:                                    {0}'.format((controlword & (1 << 7 ))>>7))
-        print('Bit 06: Reserved:                                       {0}'.format((controlword & (1 << 6 ))>>6))
-        print('Bit 05: Reserved:                                       {0}'.format((controlword & (1 << 5 ))>>5))
-        print('Bit 04: Reserved:                                       {0}'.format((controlword & (1 << 4 ))>>4))
-        print('Bit 03: Enable operation:                               {0}'.format((controlword & (1 << 3 ))>>3))
-        print('Bit 02: Quick stop:                                     {0}'.format((controlword & (1 << 2 ))>>2))
-        print('Bit 01: Enable voltage:                                 {0}'.format((controlword & (1 << 1 ))>>1))
-        print('Bit 00: Switch on:                                      {0}'.format(controlword & 1))
+        if dsp402:
+            print('Bit 15: Can be assigned to command:                     {0}'.format((controlword & (1 << 15 ))>>15))
+            print('Bit 14: Can be assigned to command:                     {0}'.format((controlword & (1 << 14 ))>>14))
+            print('Bit 13: Can be assigned to command:                     {0}'.format((controlword & (1 << 13 ))>>13))
+            print('Bit 12: Can be assigned to command:                     {0}'.format((controlword & (1 << 12 ))>>12))
+            print('Bit 11: Direction of rotation [0 Foward | 1 Reverse]:   {0}'.format((controlword & (1 << 11 ))>>11))
+            print('Bit 10: Reserved:                                       {0}'.format((controlword & (1 << 10 ))>>10))
+            print('Bit 09: Reserved:                                       {0}'.format((controlword & (1 << 9 ))>>9))
+            print('Bit 08: Halt:                                           {0}'.format((controlword & (1 << 8 ))>>8))
+            print('Bit 07: Fault reset:                                    {0}'.format((controlword & (1 << 7 ))>>7))
+            print('Bit 06: Reserved:                                       {0}'.format((controlword & (1 << 6 ))>>6))
+            print('Bit 05: Reserved:                                       {0}'.format((controlword & (1 << 5 ))>>5))
+            print('Bit 04: Reserved:                                       {0}'.format((controlword & (1 << 4 ))>>4))
+            print('Bit 03: Enable operation:                               {0}'.format((controlword & (1 << 3 ))>>3))
+            print('Bit 02: Quick stop:                                     {0}'.format((controlword & (1 << 2 ))>>2))
+            print('Bit 01: Enable voltage:                                 {0}'.format((controlword & (1 << 1 ))>>1))
+            print('Bit 00: Switch on:                                      {0}'.format(controlword & 1))
+        else:
+            print('Bit 15: Can be assigned to command:                     {0}'.format((controlword & (1 << 15 ))>>15))
+            print('Bit 14: Can be assigned to command:                     {0}'.format((controlword & (1 << 14 ))>>14))
+            print('Bit 13: Can be assigned to command:                     {0}'.format((controlword & (1 << 13 ))>>13))
+            print('Bit 12: Can be assigned to command:                     {0}'.format((controlword & (1 << 12 ))>>12))
+            print('Bit 11: Can be assigned to command:                     {0}'.format((controlword & (1 << 11 ))>>11))
+            print('Bit 10: Can be assigned to command:                     {0}'.format((controlword & (1 << 10 ))>>10))
+            print('Bit 09: Can be assigned to command:                     {0}'.format((controlword & (1 << 9 ))>>9))
+            print('Bit 08: Can be assigned to command:                     {0}'.format((controlword & (1 << 8 ))>>8))
+            print('Bit 07: Can be assigned to command:                     {0}'.format((controlword & (1 << 7 ))>>7))
+            print('Bit 06: Can be assigned to command:                     {0}'.format((controlword & (1 << 6 ))>>6))
+            print('Bit 05: Can be assigned to command:                     {0}'.format((controlword & (1 << 5 ))>>5))
+            print('Bit 04: Can be assigned to command:                     {0}'.format((controlword & (1 << 4 ))>>4))
+            print('Bit 03: Can be assigned to command:                     {0}'.format((controlword & (1 << 3 ))>>3))
+            print('Bit 02: Can be assigned to command:                     {0}'.format((controlword & (1 << 2 ))>>2))
+            print('Bit 01: Can be assigned to command | Foward (3wires):   {0}'.format((controlword & (1 << 1 ))>>1))
+            print('Bit 00: Foward | Run Authorized (3wires):               {0}'.format(controlword & 1))
         return
 
     # will be using dictionary object for now
@@ -1006,7 +1023,7 @@ class ATV71:
             motorConfig.append({'V/F Frequency on 5 points': fPoints })            
 
             # request frequency in constant power
-        
+            
             # request drive switching frequency
 
             # request nominal motor slip
